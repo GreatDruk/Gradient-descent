@@ -39,15 +39,9 @@ class BasicDescent:
         return np.mean(np.abs(y - y_pred))
     
     def calculate_Huber_loss(self, y: np.ndarray, y_pred: np.ndarray, delta: float = 1.0) -> float:
-        def huber(diff: float) -> float:
-            diff = np.abs(diff)
-            if diff < delta:
-                return diff ** 2 / 2
-            else:
-                return delta * (diff - delta / 2)
-
-        huber_vec = np.vectorize(huber)
-        return np.mean(huber_vec(y - y_pred))
+        diff: np.ndarray = np.abs(y - y_pred)
+        grad: np.ndarray = np.where(diff < delta, diff ** 2 / 2, delta * (diff - delta / 2))
+        return np.mean(grad)
     
     def calculate_Log_cosh(self, y: np.ndarray, y_pred: np.ndarray) -> float:
         return np.mean(np.log(np.cosh(y - y_pred)))
@@ -80,12 +74,10 @@ class GradientDescent(BasicDescent):
         elif self.loss_function == LossFunctions.MAE:
             return (x.T @ np.sign(y_pred - y)) / len(y)
         elif self.loss_function == LossFunctions.Huber:
-            diff = y_pred - y
-            delta = 1.0
-            if np.abs(diff) < delta:
-                return (x.T @ diff) / len(y)
-            else:
-                return (x.T @ np.sign(diff)) / len(y)
+            diff: np.ndarray     = y_pred - y
+            delta: float = 1.0
+            grad: np.ndarray = np.where(np.abs(diff) < delta, diff, delta * np.sign(diff))
+            return (x.T @ grad) / len(y)
         elif self.loss_function == LossFunctions.LogCosh:
             return (x.T @ np.tanh(y_pred - y)) / len(y)
         else:
@@ -107,4 +99,4 @@ class StochasticDescent(GradientDescent):
         x = x[ind]
         y = y[ind]
         return super().step(x, y)
-    
+
