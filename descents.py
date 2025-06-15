@@ -115,3 +115,35 @@ class MomentumDescent(GradientDescent):
     def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         gradient: np.ndarray = super().calculate_gradient(x, y)
         return self.update_weights(gradient)
+
+
+class Adam(GradientDescent):
+    def __init__(self, dim: int, lambd: float = 1e-3, eps: float = 1e-8, beta_1: float = 0.9, beta_2: float = 0.999,
+                  loss_function: LossFunctions = LossFunctions.MSE):
+        super().__init__(dim, lambd, loss_function)
+        self.eps: float = eps
+        self.beta_1: float = beta_1
+        self.beta_2: float = beta_2
+
+        self.m: np.ndarray = np.zeros(dim)
+        self.v: np.ndarray = np.zeros(dim)
+
+        self.iteration: int = 0
+
+    def update_weights(self, gradient: np.ndarray) -> np.ndarray:
+        self.iteration += 1
+
+        self.m = self.beta_1 * self.m + (1 - self.beta_1) * gradient
+        self.v = self.beta_2 * self.v + (1 - self.beta_2) * gradient ** 2
+
+        m_: np.ndarray = self.m / (1 - self.beta_1 ** self.iteration)
+        v_: np.ndarray = self.v / (1 - self.beta_2 ** self.iteration)
+
+        w_diff = -self.learning_rate() * m_ / (np.sqrt(v_) + self.eps)
+        self.w += w_diff
+
+        return w_diff
+    
+    def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        gradient: np.ndarray = super().calculate_gradient(x, y)
+        return self.update_weights(gradient)
