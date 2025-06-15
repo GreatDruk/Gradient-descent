@@ -72,7 +72,7 @@ class GradientDescent(BasicDescent):
         self.w += w_diff
         return w_diff
 
-    def calc_gradient(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    def calculate_gradient(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         y_pred = self.predict(x)
 
         if self.loss_function == LossFunctions.MSE:
@@ -92,5 +92,19 @@ class GradientDescent(BasicDescent):
             raise NotImplementedError(f"Unsupported loss: {self.loss_function}")
 
     def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
-        gradient: np.ndarray = self.calc_gradient(x, y)
+        gradient: np.ndarray = self.calculate_gradient(x, y)
         return self.update_weights(gradient)
+    
+
+class StochasticDescent(GradientDescent):
+    def __init__(self, dim: int, lambd: float = 1e-3, batch: int = 10, loss_function: LossFunctions = LossFunctions.MSE):
+        super().__init__(dim, lambd, loss_function)
+        self.batch = batch
+    
+    def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        batch_size = min(self.batch, len(y))
+        ind: np.ndarray = np.random.randint(0, len(y), batch_size)
+        x = x[ind]
+        y = y[ind]
+        return super().step(x, y)
+    
