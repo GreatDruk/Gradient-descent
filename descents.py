@@ -100,3 +100,18 @@ class StochasticDescent(GradientDescent):
         y = y[ind]
         return super().step(x, y)
 
+
+class MomentumDescent(GradientDescent):
+    def __init__(self, dim: int, lambd: float = 1e-3, alp: float = 0.9, loss_function: LossFunctions = LossFunctions.MSE):
+        super().__init__(dim, lambd, loss_function)
+        self.alp: float = alp
+        self.h: np.ndarray = np.zeros(dim)
+
+    def update_weights(self, gradient: np.ndarray) -> np.ndarray:
+        self.h = self.alp * self.h + self.learning_rate() * gradient
+        self.w -= self.h
+        return -self.h
+    
+    def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
+        gradient: np.ndarray = super().calculate_gradient(x, y)
+        return self.update_weights(gradient)
