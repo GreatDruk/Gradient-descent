@@ -147,3 +147,20 @@ class Adam(GradientDescent):
     def step(self, x: np.ndarray, y: np.ndarray) -> np.ndarray:
         gradient: np.ndarray = super().calculate_gradient(x, y)
         return self.update_weights(gradient)
+
+
+def start_descent(config: dict) -> BasicDescent:
+    name: str = config.get('name', 'full')
+    descent_map: Dict[str, Type[BasicDescent]] = {
+        'full': GradientDescent,
+        'stochastic': StochasticDescent,
+        'momentum': MomentumDescent,
+        'adam': Adam,
+    }
+
+    if name not in descent_map:
+        raise ValueError(f'Incorrect descent name, you can use one of these: {descent_map.keys()}')
+
+    descent_class: Type[BasicDescent] = descent_map[name]
+
+    return descent_class(**config.get('kwargs', {}))
