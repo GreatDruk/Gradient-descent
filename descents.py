@@ -151,6 +151,8 @@ class Adam(GradientDescent):
 
 def start_descent(config: dict) -> BasicDescent:
     name: str = config.get('name', 'full')
+    loss_name: str = config.get('loss', 'MSE')
+    kwargs: dict = config.get('kwargs', {})
     descent_map: Dict[str, Type[BasicDescent]] = {
         'full': GradientDescent,
         'stochastic': StochasticDescent,
@@ -158,9 +160,16 @@ def start_descent(config: dict) -> BasicDescent:
         'adam': Adam,
     }
 
+    try:
+        loss_function = LossFunctions[loss_name]
+    except KeyError:
+        valid_losses = [e.name for e in LossFunctions]
+        raise ValueError(f'Incorrect loss function, you can use one of these: {valid_losses}')
+
     if name not in descent_map:
         raise ValueError(f'Incorrect descent name, you can use one of these: {descent_map.keys()}')
 
+    kwargs['loss_function'] = loss_function
     descent_class: Type[BasicDescent] = descent_map[name]
 
-    return descent_class(**config.get('kwargs', {}))
+    return descent_class(**kwargs)
